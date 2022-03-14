@@ -1037,7 +1037,29 @@ MyBatis接口方法中可以接收各种各样的参数，MyBatis底层对于这
 
 
 
+## 注解完成增删改查
 
+使用注解开发会比使用配置文件开发更方便
+
+```java
+		//注解开发
+    @Select("select * from tb_brand;")
+    List<Brand> selectAll();
+
+    @Select("select * from tb_brand where id = #{id} ;")
+    Brand selectById();
+```
+
+- 查询：@Select
+- 添加：@Insert
+- 修改：@Update
+- 删除：@Delete
+
+### 提示：
+
+注解完成简单功能
+
+配置文件完成复杂功能（动态SQL）
 
 
 

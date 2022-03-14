@@ -8,12 +8,21 @@ import java.util.Map;
 
 public interface BrandMapper {
 
+
+//    //注解开发
+//    @Select("select * from tb_brand;")
+//    List<Brand> selectAll();
+//
+//    @Select("select * from tb_brand where id = #{id} ;")
+//    Brand selectById();
+
     /**
      * 查询所有
      *
      * @return
      */
     List<Brand> getAll();
+
 
     /**
      * 查看详情
