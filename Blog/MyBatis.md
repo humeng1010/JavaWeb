@@ -411,3 +411,641 @@ mybatis-config
 
 **细节**：**配置各个标签的时候**，**需要遵守前后的顺序**
 
+
+
+## 结果映射
+
+### resultMap标签
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace:名称空间
+-->
+<mapper namespace="com.meng.mapper.BrandMapper">
+    <!--    id：唯一标识
+            resultType:返回结果的类型（将来数据返回的是什么类型就写什么类型）
+    -->
+    <!--    我们发现数据库列名和实体类的名称有的不一样，显示数据为null-->
+    <!--    解决方案一：起别名（每次查询都要定义一次别名，不方便）-->
+    <!--    <select id="getAll" resultType="brand">-->
+    <!--        select id, brand_name as brandName, company_name as companyName, ordered, description, status-->
+    <!--        from tb_brand;-->
+    <!--    </select>-->
+    <!--    解决方案二：sql片段（不灵活）-->
+    <!--    <sql id="brand_column">-->
+    <!--        id, brand_name as brandName, company_name as companyName, ordered, description, status-->
+    <!--    </sql>-->
+    <!--    <select id="getAll" resultType="brand">-->
+    <!--        select-->
+    <!--        <include refid="brand_column"></include>-->
+    <!--        from tb_brand;-->
+    <!--    </select>-->
+    <!--解决方案三：resultMap-->
+    <!--    id:唯一标识
+            type：映射的文件类型（该实体类），支持别名
+    -->
+    <resultMap id="brandResultMap" type="brand">
+        <!--
+                id:完成主键字段的映射
+                result：完成一般字段的映射
+                column:表的列名
+                property:实体列的属性名
+        -->
+        <result column="brand_name" property="brandName"></result>
+        <result column="company_name" property="companyName"></result>
+    </resultMap>
+    <select id="getAll" resultMap="brandResultMap">
+        select *
+        from tb_brand;
+    </select>
+</mapper>
+```
+
+
+
+## 参数占位符
+
+```
+参数占位符：
+1. #{}  :select * from tb_brand where id = ?;（会将其参数替换为？，为了防止SQL注入）
+2. ${}  :select * from tb_brand where id = 1;（拼SQL，存在SQL注入问题）不要使用！！
+3. 使用时机：
+    参数传递的时候使用: #{}
+    
+特殊字符处理（例如小于号<)
+1. 转义字符 : &lt;(字符少的时候)
+2. CDATA区 :<![CDATA[  <  ]]>  (字符多的时候)
+```
+
+```xml
+<!--    参数占位符：
+            1. #{}  :select * from tb_brand where id = ?;（会将其参数替换为？，为了防止SQL注入）
+            2. ${}  :select * from tb_brand where id = 1;（拼SQL，存在SQL注入问题）不要使用！！
+            3. 使用时机：
+                参数传递的时候使用: #{}
+
+            特殊字符处理（例如小于号<)
+            1. 转义字符 : &lt;(字符少的时候)
+            2. CDATA区 :<![CDATA[  <  ]]>  (字符多的时候)
+    -->
+    <select id="getById" resultMap="brandResultMap">
+        select *
+        from tb_brand
+        where id = #{id};
+    </select>
+```
+
+
+
+
+
+## 条件查询
+
+```java
+/**
+     * 条件查询
+     * * 参数接收：
+     * 1. 散装参数：如果方法中有多个参数（传到Mapper的映射的xml SQL文件 不知道哪个对应哪个），所以需要使用@Parma("SQL参数占位符")
+     * 2. 对象参数
+     * 3. map集合参数
+     *
+     * @param status
+     * @param companyName
+     * @param brandName
+     * @return
+     */
+    List<Brand> selectByCondition(@Param("status") int status, @Param("companyName") String companyName, @Param("brandName") String brandName);
+
+```
+
+```xml
+<select id="selectByCondition" resultMap="brandResultMap">
+        select *
+        from tb_brand
+        where status = #{status}
+          and company_name like #{companyName}
+          and brand_name like #{brandName};
+    </select>
+```
+
+```java
+/**
+     * 条件查询
+     *
+     * @throws Exception
+     */
+    @Test
+    public void selectByCondition() throws Exception {
+        //接收参数
+        Integer status = 1;
+        String companyName = "华为";//%华为%
+        String brandName = "华为";//%华为%
+        //处理参数
+        companyName = "%" + companyName + "%";
+        brandName = "%" + brandName + "%";
+        //1、获取SqlSessionFactory对象
+        String resource = "mybatis-config.xml";
+        InputStream inputStream = Resources.getResourceAsStream(resource);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+
+
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        BrandMapper brandMapper = sqlSession.getMapper(BrandMapper.class);
+
+        List<Brand> brands = brandMapper.selectByCondition(status, companyName, brandName);
+
+        System.out.println(brands);
+
+        sqlSession.close();
+
+    }
+```
+
+发现存在BUG，当用户只传入一个参数的时候
+
+我们原来的SQL为
+
+```sql
+select *
+        from tb_brand
+        where status = #{status}
+          and company_name like #{companyName}
+          and brand_name like #{brandName};
+```
+
+当只传入brandName时
+
+```sql
+select *
+        from tb_brand
+        where status = #{status}
+          and company_name like #{companyName}
+          and brand_name like #{brandName};
+Parameters: null,null,%华为%(String)
+```
+
+所有我们就要使用动态的条件查询了
+
+### 动态条件查询
+
+- SQL语句随着用户的输入或外部条件的变化而变化，我们称之为 动态SQL
+
+- ```xml
+  <select id="selectByCondition" resultMap="brandResultMap">
+          select *
+          from tb_brand
+          where status = #{status}
+            and company_name like #{companyName}
+            and brand_name like #{brandName};
+      </select>
+  ```
+
+- MyBatis对动态SQL有很强大的支持
+
+  - if
+  - choose(when,otherwise)
+  - trim(where,set)
+  - foreach
+
+- ```xml
+  if标签（这个时候出现了一个问题 where后可能直接连接了and 造成SQL语法错误，解决方案MyBatis提供了where标签）
+  <select id="selectByCondition" resultMap="brandResultMap">
+          select *
+          from tb_brand
+          where
+          <if test="status != null">
+              status = #{status}
+          </if>
+          <if test="companyName != null and companyName !='' ">
+              and company_name like #{companyName}
+          </if>
+          <if test="brandName != null and brandName != '' ">
+              and brand_name like #{brandName};
+          </if>
+      </select>
+  ```
+
+- where标签(解决上面的SQL语法错误问题)
+
+  ```xml
+  <select id="selectByCondition" resultMap="brandResultMap">
+          select *
+          from tb_brand
+          <where>
+              <if test="status != null">
+                  and status = #{status}
+              </if>
+              <if test="companyName != null and companyName !='' ">
+                  and company_name like #{companyName}
+              </if>
+              <if test="brandName != null and brandName != '' ">
+                  and brand_name like #{brandName};
+              </if>
+          </where>
+      </select>
+  
+  <!-- Preparing: select * from tb_brand WHERE company_name like ?   -->
+  ```
+
+
+
+### 单条件的动态查询
+
+- 从多个条件中选择一个
+- choose相当于switch
+
+```xml
+<select id="selectByConditionSingle" resultMap="brandResultMap">
+        select *
+        from tb_brand
+        where
+        <choose><!-- choose相当于switch -->
+            <when test="status != null"><!--when相当于case  -->
+                status = #{status}
+            </when>
+            <when test="companyName != null and companyName != '' ">
+                company_name like #{companyName}
+            </when>
+            <when test="brandName != null and brandName != ''">
+                brand_name like #{brandName};
+            </when>
+            <otherwise><!-- 相当于default -->
+                1=1
+            </otherwise>
+        </choose>
+    </select>
+<!--  Preparing: select * from tb_brand WHERE 1=1 -->
+```
+
+```xml
+<select id="selectByConditionSingle" resultMap="brandResultMap">
+        select *
+        from tb_brand
+        <where><!-- 使用where标签-->
+            <choose>
+                <when test="status != null">
+                    status = #{status}
+                </when>
+                <when test="companyName != null and companyName != '' ">
+                    company_name like #{companyName}
+                </when>
+                <when test="brandName != null and brandName != ''">
+                    brand_name like #{brandName};
+                </when>
+            </choose>
+        </where>
+    </select>
+<!--  Preparing: select * from tb_brand -->
+```
+
+
+## 添加
+
+- BrandMapper.java
+
+  ```java
+  /**
+       * 添加
+       */
+      void add(Brand brand);
+  ```
+
+- BrandMapper.xml
+
+  ```xml
+  <!--    添加-->
+      <insert id="add">
+          insert into tb_brand (brand_name, company_name, ordered, description, status)
+          values (#{brandName}, #{companyName}, #{ordered}, #{description}, #{status});
+      </insert>
+  ```
+
+- Test.java
+
+  ```java
+  /**
+       * 添加
+       *
+       * @throws IOException
+       */
+      @Test
+      public void add() throws IOException {
+          int status = 1;
+          String companyName = "测试数据";
+          String brandName = "测试数据";
+          String description = "测试数据";
+          int ordered = 100;
+  
+          Brand brand = new Brand();
+          brand.setStatus(status);
+          brand.setCompanyName(companyName);
+          brand.setBrandName(brandName);
+          brand.setDescription(description);
+          brand.setOrdered(ordered);
+  
+          //1、获取SqlSessionFactory对象
+          String resource = "mybatis-config.xml";
+          InputStream inputStream = Resources.getResourceAsStream(resource);
+          SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+  
+          SqlSession sqlSession = sqlSessionFactory.openSession();
+          BrandMapper brandMapper = sqlSession.getMapper(BrandMapper.class);
+  
+          brandMapper.add(brand);
+  
+  
+          sqlSession.commit();//提交事务!!!
+          sqlSession.close();
+  
+      }
+  ```
+
+### 返回添加数据的主键
+
+  useGeneratedKeys="true" keyProperty="id"
+
+  ```xml
+   <insert id="add" useGeneratedKeys="true" keyProperty="id">
+          insert into tb_brand (brand_name, company_name, ordered, description, status)
+          values (#{brandName}, #{companyName}, #{ordered}, #{description}, #{status});
+      </insert>
+  ```
+
+
+## 修改-动态字段
+
+  ```xml
+  <update id="update">
+          update tb_brand
+          <set>
+              <if test="brandName != null and brandName != '' ">
+                  brand_name = #{brandName},
+              </if>
+              <if test="companyName != null and companyName != '' ">
+                  company_name = #{companyName},
+              </if>
+              <if test="description != null and description != '' ">
+                  description = #{description},
+              </if>
+              <if test="ordered != null">
+                  ordered = #{ordered},
+              </if>
+              <if test="status != null ">
+                  status = #{status},
+              </if>
+          </set>
+          where id = #{id};
+      </update>
+  ```
+
+  ```java
+  /**
+       * 修改
+       *
+       * @throws IOException
+       */
+      @Test
+      public void update() throws IOException {
+          int id = 2;//要修改的id
+  
+          int status = 1;
+          String companyName = "测试数据11111111";
+          String brandName = "测试数据";
+          String description = "测试数据";
+          int ordered = 100000;
+  
+          Brand brand = new Brand();
+          brand.setId(id);
+          brand.setStatus(status);
+          //brand.setCompanyName(companyName);
+          //brand.setBrandName(brandName);
+          //brand.setDescription(description);
+          brand.setOrdered(ordered);
+  
+          //1、获取SqlSessionFactory对象
+          String resource = "mybatis-config.xml";
+          InputStream inputStream = Resources.getResourceAsStream(resource);
+          SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+  
+          SqlSession sqlSession = sqlSessionFactory.openSession();
+          BrandMapper brandMapper = sqlSession.getMapper(BrandMapper.class);
+  
+          int count = brandMapper.update(brand);
+          System.out.println(count);
+  
+  
+          sqlSession.commit();//提交事务
+          sqlSession.close();
+  
+      }
+  ```
+## 删除
+
+###   根据id删除
+
+```xml
+<!--    删除-->
+    <delete id="deleteById">
+        delete
+        from tb_brand
+        where id = #{id};
+    </delete>
+```
+
+```java
+@Test
+    public void deleteById() throws IOException {
+        int id = 10;//要删除的id
+
+        //1、获取SqlSessionFactory对象
+        String resource = "mybatis-config.xml";
+        InputStream inputStream = Resources.getResourceAsStream(resource);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        BrandMapper brandMapper = sqlSession.getMapper(BrandMapper.class);
+
+        int count = brandMapper.deleteById(id);
+        System.out.println(count);
+
+
+        sqlSession.commit();//提交事务
+        sqlSession.close();
+
+    }
+```
+
+
+
+### 批量删除
+
+```java
+/**
+     * 批量删除
+     *
+     * @param ids
+     * @return
+     */
+    int deleteByIds(@Param("ids") int[] ids);
+
+```
+
+
+
+```xml
+<!--    批量删除-->
+    <!--    mybatis会将数组封装成一个map集合
+            * 默认 ： array = 数组
+            * 使用 @Param注解改变map集合的默认key的名称
+
+            foreach标签中的属性
+            * collection ： 集合的名字（map集合）
+            * item ：使用foreach遍历后得到的每一个元素
+            * separator ： 每一个元素之间的分割符" , "
+            * open : 开头的符号 " ( "
+            * close : 结束的符号 " ) "
+    -->
+    <delete id="deleteByIds">
+        delete
+        from tb_brand
+        where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+```
+
+```java
+@Test
+    public void deleteByIds() throws IOException {
+        int[] ids = {12, 13, 14, 15, 16};//要删除的id
+
+        //1、获取SqlSessionFactory对象
+        String resource = "mybatis-config.xml";
+        InputStream inputStream = Resources.getResourceAsStream(resource);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        BrandMapper brandMapper = sqlSession.getMapper(BrandMapper.class);
+
+        int count = brandMapper.deleteByIds(ids);
+        System.out.println(count);
+
+
+        sqlSession.commit();//提交事务
+        sqlSession.close();
+
+    }
+```
+
+```
+[DEBUG] 14:38:05.563 [main] c.m.m.B.deleteByIds - ==>  Preparing: delete from tb_brand where id in ( ? , ? , ? , ? , ? ) 
+[DEBUG] 14:38:05.586 [main] c.m.m.B.deleteByIds - ==> Parameters: 12(Integer), 13(Integer), 14(Integer), 15(Integer), 16(Integer) 
+[DEBUG] 14:38:05.593 [main] c.m.m.B.deleteByIds - <==    Updates: 5 
+5
+[DEBUG] 14:38:05.593 [main] o.a.i.t.j.JdbcTransaction - Committing JDBC Connection [com.mysql.cj.jdbc.ConnectionImpl@4dbb42b7] 
+[DEBUG] 14:38:05.594 [main] o.a.i.t.j.JdbcTransaction - Resetting autocommit to true on JDBC Connection [com.mysql.cj.jdbc.ConnectionImpl@4dbb42b7] 
+[DEBUG] 14:38:05.594 [main] o.a.i.t.j.JdbcTransaction - Closing JDBC Connection [com.mysql.cj.jdbc.ConnectionImpl@4dbb42b7] 
+[DEBUG] 14:38:05.595 [main] o.a.i.d.p.PooledDataSource - Returned connection 1304117943 to pool. 
+```
+
+
+
+
+
+## 参数传递
+
+MyBatis接口方法中可以接收各种各样的参数，MyBatis底层对于这些参数进行不同的封装处理方式
+
+- 单个参数：
+
+  1. POJO类型：直接使用，属性名 和 参数占位符( #{} )名称一致
+
+  2. Map集合：直接使用，键名 和 参数占位符名称一致
+
+  3. **Collection**：也封装为Map集合，**可以使用@Param注解，替换Map集合的默认的arg键名**
+
+     map.put("arg0",collection集合)
+
+     map.put("collection",collection集合)
+
+  4. **List**：也封装为Map集合，**可以使用@Param注解，替换Map集合的默认的arg键名**
+
+     map.put("arg0",List集合)
+
+     map.put("collection",List集合)
+
+     map.put("List",List集合)
+
+  5. **Array**：也封装为Map集合 ，**可以使用@Param注解，替换Map集合的默认的arg键名**
+
+     map.put("arg0",数组)
+
+     map.put("array",数组)
+
+  6. 其他类型：直接使用
+
+- **多个参数**：封装为Map集合，**可以使用@Param注解，替换Map集合的默认的arg键名**
+
+  map.put("arg0",参数1)
+
+  map.put("param1",参数1)
+
+  map.put("arg1",参数2)
+
+  map.put("param2",参数2)
+
+  MyBatis提供了ParamNameResolver类来进行参数封装
+
+  ```java
+  /**
+       * 条件查询
+       * * 参数接收：
+       * 1. 散装参数：如果方法中有多个参数（传到Mapper的映射的xml SQL文件 不知道哪个对应哪个），所以需要使用@Parma("SQL参数占位符")
+       * <p>
+       * 1. 散装参数：多个参数（mybatis会把多个参数封装为Mao集合）
+       * 封装为Map集合(底层原理）
+       * map值为参数值，而不是@Param注解中的
+       * 如果不写@Param map的键是默认的[arg0,arg1,arg3...]或者[param1,param2...]
+       * map.put("arg0",status)
+       * map.put("param1",status)
+       * <p>
+       * map.put("arg1",companyName)
+       * map.put("param2",companyName)
+       * <p>
+       * map.put("arg2",brandName)
+       * map.put("param3",brandName)
+       *
+       * @param status
+       * @param companyName
+       * @param brandName
+       * @return
+       */
+      List<Brand> selectByCondition(@Param("status") int status, @Param("companyName") String companyName, @Param("brandName") String brandName);
+  
+  ```
+
+
+
+### 建议：
+
+将来 都使用 @Param 注解 来修改 Map集合中的 默认键名，并使用 修改后的名称 来获取值，这样可读性更高！
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 package com.meng;
 
 import com.meng.mapper.UserMapper;
-import com.meng.pojo.User;
+import com.meng.pojo.Brand;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -24,13 +24,13 @@ public class MyBatisDemo2 {
         SqlSession sqlSession = sqlSessionFactory.openSession();
 
         //3、执行sql语句
-        //List<User> users = sqlSession.selectList("com.meng.MyBatisDemo.selectAll");
+        //List<User> brands = sqlSession.selectList("com.meng.MyBatisDemo.selectAll");
         //3.1获取UserMapper接口的代理对象
         UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
-        List<User> users = userMapper.selectAll();
+        List<Brand> brands = userMapper.selectAll();
 
         //4、打印users
-        System.out.println(users);
+        System.out.println(brands);
 
         //5、释放资源
         sqlSession.close();

@@ -1,6 +1,6 @@
 package com.meng.mapper;
 
-import com.meng.pojo.User;
+import com.meng.pojo.Brand;
 
 import java.util.List;
 
@@ -11,6 +11,12 @@ public interface UserMapper {
      *
      * @return
      */
-    List<User> selectAll();
+    List<Brand> selectAll();
+
+    /**
+     * @return
+     */
+    Brand getById();
+
 
 }

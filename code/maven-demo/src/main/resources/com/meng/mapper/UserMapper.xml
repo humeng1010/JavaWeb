@@ -9,8 +9,13 @@
     <!--    id：唯一标识
             resultType:返回结果的类型（将来数据返回的是什么类型就写什么类型）
     -->
-    <select id="selectAll" resultType="User">
+    <select id="selectAll" resultType="Brand">
         select *
-        from tb_user;
+        from tb_brand;
+    </select>
+    <select id="getById" resultType="Brand">
+        select *
+        from tb_brand
+        where id = #{id};
     </select>
 </mapper>
