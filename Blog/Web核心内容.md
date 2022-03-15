@@ -225,15 +225,123 @@ JavaEE：Java企业版。指Java企业级开发的技术规范总和。包含13�
 
 - Servlet是**根接口**有抽象实现类GenericServlet，这个抽象实现类又有**HttpServlet抽象实现类**（对HTTP协议封装的Servlet实现类）
 - 我们将来都是开发B/S架构的web项目，都是针对HTTP协议，所以我们**自定义的Servlet**，会**继承HttpServlet**
-- 
+
+```java
+package com.meng.web;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet(value = "/demo2")
+public class ServletDemo2 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("get...");
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("post...");
+    }
+}
+
+```
+
+#### 思考
+
+1. HttpServlet中为什么要根据请求方式的不同，调用不同的方法？
+
+   因为Get和POST的请求消息不一样，我们需要分别的去处理
+
+#### 总结
+
+1. HttpServlet使用步骤：
+
+   1. 继承HttpServlet
+   2. 重写doGet和doPost方法
+
+2. HttpServlet原理
+
+   获取请求方式，根据不同的请求方式，调用不同的doXxx方法
 
 
+
+### Servlet urlPattern配置
+
+- Servlet要想被访问，必须配置其访问路径（urlPattern）
+
+  1. 一个Servlet，可以配置多个urlPattern
+
+     @WebServlet(urlPatterns = { " /demo1 " , " /demo2 " }  )
+
+  2. urlPattern配置规则
+
+     1. 精确匹配
+     2. 目录匹配
+     3. 扩展名匹配
+     4. 任意匹配
+
+  1. 精确匹配：
+     - 配置路径：@WebServlet("/user/select")
+     - 访问路径：localhost:8080/web-demo/user/select
+  2. 目录匹配：
+     - 配置路径：@WebServlet("/user/*")
+     - 访问路径：localhost:8080/web-demo/user/aaa   或者   localhost:8080/web-demo/user/bbb
+  3. 扩展名匹配：
+     - 配置路径：@WebServlet("*.do")
+     - 访问路径：localhost:8080/web-demo/aaa.do或者localhost:8080/web-demo/bbb.do
+  4. 任意匹配：不要配置
+     - 配置路径：@WebServlet("/")或者@WebServlet("/*")
+     - 访问路径：localhost:8080/web-demo/aaa 或者 localhost:8080/web-demo/bbb
+
+  优先级：精确路径>目录路径>扩展名路径> /* > /
+
+
+
+## Request&Response
+
+- Request：**获取**请求数据
+- Response：**设置**响应数据
 
   
 
-  
+### Request
+
+#### Request继承体系
+
+1. ServletRequest：java提供的请求对象根接口
+2. HttpServletRequest：java提供的对Http协议封装的请求对象接口（继承1）
+3. RequestFacade：Tomcat定义的实现类（继承2）（tomcat需要解析请求数据，封装为request对象，并且创建request对象传递到service方法中
 
 
+
+
+
+
+
+
+
+
+
+#### Request获取请求数据
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### Request请求转发
 
 
 
