@@ -7,11 +7,13 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="maven-demo" />
+        <module name="tomcat-demo1" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="maven-demo" target="1.8" />
       <module name="maven-demo2" target="1.8" />
+      <module name="tomcat-demo1" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

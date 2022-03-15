@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/code.iml" filepath="$PROJECT_DIR$/.idea/code.iml" />
       <module fileurl="file://$PROJECT_DIR$/d1_JDBC/d1_JDBC.iml" filepath="$PROJECT_DIR$/d1_JDBC/d1_JDBC.iml" />
       <module fileurl="file://$PROJECT_DIR$/maven-demo/maven-demo.iml" filepath="$PROJECT_DIR$/maven-demo/maven-demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tomcat-demo1/tomcat-demo1/tomcat-demo1.iml" filepath="$PROJECT_DIR$/tomcat-demo1/tomcat-demo1/tomcat-demo1.iml" />
     </modules>
   </component>
 </project>

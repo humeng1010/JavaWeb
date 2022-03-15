@@ -1,7 +1,10 @@
 package com.meng.mapper;
 
 import com.meng.pojo.Brand;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.ResultMap;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 import java.util.Map;
@@ -9,12 +12,42 @@ import java.util.Map;
 public interface BrandMapper {
 
 
-//    //注解开发
-//    @Select("select * from tb_brand;")
-//    List<Brand> selectAll();
-//
-//    @Select("select * from tb_brand where id = #{id} ;")
-//    Brand selectById();
+    //注解开发
+
+    /**
+     * 查找全部
+     *
+     * @return
+     */
+    @Select("select * from tb_brand;")
+    @ResultMap("brandResultMap")
+    List<Brand> selectAll();
+
+    /**
+     * 根据id查找
+     *
+     * @return
+     */
+    @ResultMap("brandResultMap")//结果映射集
+    @Select("select * from tb_brand where id = #{id} ;")
+    Brand selectById(int id);
+
+    /**
+     * 根据id删除
+     *
+     * @param id
+     * @return
+     */
+    @Delete("delete from tb_brand where id = #{id};")
+    int removeById(int id);
+
+
+
+
+
+
+
+    /*----------------------------------*/
 
     /**
      * 查询所有

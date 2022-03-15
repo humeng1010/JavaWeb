@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="FrameworkDetectionExcludesConfiguration">
+    <file type="web" url="file://$PROJECT_DIR$/tomcat-demo1/tomcat-demo1" />
+  </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/maven-demo/pom.xml" />
         <option value="$PROJECT_DIR$/maven-demo2/pom.xml" />
+        <option value="$PROJECT_DIR$/tomcat-demo1/tomcat-demo1/pom.xml" />
       </list>
     </option>
   </component>
