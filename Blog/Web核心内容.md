@@ -319,29 +319,582 @@ public class ServletDemo2 extends HttpServlet {
 
 
 
-
-
-
-
-
-
-
-
 ##### Request获取请求数据
 
+- 请求数据分为三部分：
+
+  1. **请求行**：GET/reuqest-demo/req1?username=zhangsan HTTP/1.1
+     - String getMethod()：获取请求方式：GET
+     - String getContextPath()：获取虚拟目录（项目访问路径）：/request-demo
+     - StringBuffer getRequestURL() ：获取URL(统一资源定位符)：http://localhost:8080/request-demo/req1
+     - String getRequestURI()：获取URI(统一资源标识符)：/request-demo/req1
+     - String getQueryString()：获取请求参数（GET方式）：username=zhangsan&password=123
+  2. **请求头**：
+     - String getHeader(String name)：根据请求头名称，获取值。（user-agent：浏览器版本）
+  3. **请求体**：
+     - ServletInputStream getInputStream()：获取字节输入流（音视频文件）
+     - BufferReader getReader()：获取字符输入流（文本）
+
+  ```java
+  package com.meng.web;
+  
+  import javax.servlet.ServletException;
+  import javax.servlet.annotation.WebServlet;
+  import javax.servlet.http.HttpServlet;
+  import javax.servlet.http.HttpServletRequest;
+  import javax.servlet.http.HttpServletResponse;
+  import java.io.BufferedReader;
+  import java.io.IOException;
+  
+  @WebServlet("/demo3")
+  public class ServletDemo3 extends HttpServlet {
+      @Override
+      protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+          //1. **请求行**：GET/reuqest-demo/req1?username=zhangsan HTTP/1.1
+          //   - String getMethod()：获取请求方式：GET
+          String method = request.getMethod();
+          System.out.println("请求方式：" + method);
+          //   - String getContextPath()：获取虚拟目录（项目访问路径）：/tomcat-demo1
+          String contextPath = request.getContextPath();
+          System.out.println("虚拟目录" + contextPath);
+          //   - StringBuffer getRequestURL() ：获取URL(统一资源定位符)：http://localhost:8080/tomcat-demo1/demo3
+          StringBuffer url = request.getRequestURL();
+          System.out.println(url.toString());
+  
+          //   - String getRequestURI()：获取URI(统一资源标识符)：/request-demo/req1
+          String requestURI = request.getRequestURI();
+          System.out.println(requestURI);
+          //   - String getQueryString()：获取请求参数（GET方式）：username=zhangsan&password=123
+          String queryString = request.getQueryString();
+          System.out.println(queryString);
+          //2. **请求头**：
+          //   - String getHeader(String name)：根据请求头名称，获取值。（user-agent：浏览器版本）
+          String agent = request.getHeader("user-agent");
+          System.out.println(agent);
+          //3. **请求体**：
+          //   - ServletInputStream getInputStream()：获取字节输入流（音视频文件）
+          //   - BufferReader getReader()：获取字符输入流（文本）
+          BufferedReader reader = request.getReader();
+          String line = reader.readLine();
+          System.out.println(line);
+  
+      }
+  
+      @Override
+      protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+          this.doGet(request, response);
+  
+      }
+  }
+  
+  ```
+
+  
+
+##### Request使用通用方式获取参数
+
+- 刚刚我们发现：
+  - GET方式：
+    - String getQueryString()
+  - POST方式：
+    - BufferRead getReader();   reader.readLine();
+- 通用方式：（思考：因为GET和POST方式代码中只有一部分获取用户传输的数据不一样，其他都一样，所有我们想在doPost中写this.doGet(request,response)将来收到POST请求也让它去GET方法中，可以大大简化重复代码，所以我们要使用相同的方式去获取不同方式传输的数据
+  - 我们的想法：在doGet中写一个先获取请求方式，然后if判断是GET还是POST，如果是GET就调用request的getQueryString()方法，如果是POST就调用request的getReader()方法然后读一行reader.readLine();。
+  - 其实Request已经这样做好了，而且做得更详细，它会把传进来的参数自动切割为键和值的**Map集合**！！而且如果一个键对应多个值，Request会判断键是否一样，如果一样会把值拼接一起形成一个数组！！！**Map集合：键：字符串；值：字符串数组**我们可以直接通过Request对象获取数据
+  - Request提供的获取参数的通用方法：
+    - Map<String, String[]> getParameterMap();：获取所有参数Map集合
+    - String[] getParameterValues(String name)：根据名称获取参数值（数组）
+    - String getParameter(String name)：根据名称获取参数值（单个值）
 
 
 
+```java
+package com.meng.web;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Map;
+
+@WebServlet("/req1")
+public class RequestDemo1 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String method = req.getMethod();
+        System.out.println(method);
+        //1、获取所有参数集合
+        Map<String, String[]> map = req.getParameterMap();
+        for (String key : map.keySet()) {
+            System.out.print(key + ":");
+            String[] values = map.get(key);
+            for (String value : values) {
+                System.out.print(value + " ");
+            }
+            System.out.println();
+        }
+        System.out.println("-------------------");
+        //2、根据key获取参数值，数组
+        String[] hobbies = req.getParameterValues("hobby");
+        System.out.println(Arrays.toString(hobbies));
+        System.out.println("-------------------");
+
+        //3、根据key获取单个参数值
+        String username = req.getParameter("username");
+        String password = req.getParameter("password");
+        System.out.println(username);
+        System.out.println(password);
+        System.out.println("-------------------");
+
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.doGet(req, resp);
+    }
+}
+
+```
 
 
 
+##### 请求参数中文乱码处理
 
+- 请求参数如果存在中文数据，则会乱码，原因：tomcat7默认的编解码字符集为ISO_8859_1
 
+- 解决方案：
 
+  - POST：设置输入流的编码
+
+    ```java
+    //1、解决乱码:POST。POST底层是通过getReader() 字符输入流获取数据，但是tomcat默认的获取流的数据的编码是ISO-8859-1的 所以读中文数据的时候乱码
+            request.setCharacterEncoding("UTF-8");//设置字符输入流的编码
+    ```
+
+  - GET：获取参数后，先通过getBytes(StandardCharsets.ISO_8859_1)编码获取参数对应的字节码数组byte[] bytes，再通过
+
+    String s = new String(bytes, StandardCharsets.UTF_8);通过UTF-8将字节数组转换为字符串，解码，详细解析如下：
+
+    ```java
+    @Override
+        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+            //1、解决乱码:POST。POST底层是通过getReader() 字符输入流获取数据，但是tomcat默认的获取流的数据的编码是ISO-8859-1的 所以读中文数据的时候乱码
+            request.setCharacterEncoding("UTF-8");//设置字符输入流的编码
+            //2、获取username
+            String username = request.getParameter("username");
+            //System.out.println(username);
+    
+            //1、get方式，底层获取请求参数和post不一样，所以不可以使用设置字符输入流的编码
+            //  getQueryString() 返回的是字符串
+            //  乱码原因：首先中文参数通过浏览器的HTTP协议发送到Tomcat中，
+            //  而浏览器不支持中文，则会对中文的字符串做出处理，会对中文进行URL编码
+            //  （ 浏览器数据：张三----浏览器对utf-8进行URL编码为----->%E5%BC%A0%E4%B8%89 ---传送到--> tomcat中 ）
+            //  （tomcat7对URL解码 ： %E5%BC%A0%E4%B8%89-------ISO-8859-1解码 --- 产生乱码-------> å¼ ä¸）
+            //  解决思路：既然tomcat通过ISO_8859_1解码产生乱码，但是底层的字符编码始终没有改变
+            //   我们可以得到乱码的字符编码 ( getBytes(StandardCharsets.ISO_8859_1) ) 要通过StandardCharsets.ISO_8859_1进行解码获得字节编码为：
+            //  [-27, -68, -96, -28, -72, -119]   就是 张三 对应的二进制的转为十进制的编码的字符集编码utf-8（一个汉字占三个字节）
+            //  然后再通过 new String的构造器方法把字符集：[-27, -68, -96, -28, -72, -119] 按照utf-8编码得到 张三
+            byte[] usernameBytes = username.getBytes(StandardCharsets.ISO_8859_1);//转换为字节数据，编码
+            String s = new String(usernameBytes, StandardCharsets.UTF_8);//将字节数组转换为字符串，解码
+            //String newUsername = CharsetsUtil.getChinese(username);自定义的一个工具类，用于解决get方式的乱码问题
+            System.out.println(s);
+    
+    
+        }
+    ```
+
+  - 自定义了一个解决Tomcat7 的获取 Get 方式的参数乱码的工具类
+
+    ```java
+    package com.meng.utils;
+    
+    import java.nio.charset.StandardCharsets;
+    
+    /**
+     * 解决Get请求方式获取参数乱码的工具类！！！注意仅仅解决Get请求方式乱码
+     * 由于Get请求底层获取参数为getQueryString() 返回值为String字符串
+     * 乱码原因：首先中文参数通过浏览器的HTTP协议发送到Tomcat中，
+     * 而浏览器不支持中文，则会对中文的字符串做出处理，会对中文进行URL编码
+     * （ 浏览器数据：张三----浏览器对utf-8进行URL编码为----->%E5%BC%A0%E4%B8%89 ---传送到--> tomcat中 ）
+     * （tomcat7对URL解码 ： %E5%BC%A0%E4%B8%89-------ISO-8859-1解码 --- 产生乱码-------> å¼ ä¸）
+     * 解决思路：既然tomcat通过ISO_8859_1解码产生乱码，但是底层的字符编码始终没有改变
+     * 我们可以得到乱码的字符编码 ( getBytes(StandardCharsets.ISO_8859_1) ) 要通过StandardCharsets.ISO_8859_1进行解码获得字节编码为：
+     * [-27, -68, -96, -28, -72, -119]   就是 张三 对应的二进制的转为十进制的编码的字符集编码utf-8（一个汉字占三个字节）
+     * 然后再通过 new String的构造器方法把字符集：[-27, -68, -96, -28, -72, -119] 按照utf-8编码得到 张三
+     * <p>
+     * <p>
+     * 由于解决Post方式请求参数乱码可以直接通过设置字符输入流的编码进行解决：
+     * 解决乱码:POST。
+     * POST底层是通过getReader() 字符输入流获取数据，但是tomcat默认的获取流的数据的编码是ISO-8859-1的 所以读中文数据的时候乱码
+     * request.setCharacterEncoding("UTF-8");//通过这行代码设置字符输入流的编码
+     */
+    public class CharsetsUtil {
+        public static String getChinese(String s) {
+            //通过ISO_8859_1编码获取s的字节
+            byte[] bytes = s.getBytes(StandardCharsets.ISO_8859_1);
+            //直接使用utf-8对字节进行解码获取内容
+            return new String(bytes, StandardCharsets.UTF_8);
+        }
+    }
+    
+    ```
+
+- Tomcat8.0 之后，已经将GET请求乱码问题解决，设置默认的解码方式为UTF-8
 
 
 
 ##### Request请求转发
+
+- 请求转发(forward)：一种在服务器内部的资源跳转方式（转发地址栏的url不会变，重定向url会改变，在登入的时候要使用重定向改变url地址为主页面，防止刷新的时候登入表单的重复提交）
+
+- 实现方式：
+
+  ```java
+  request.getRequestDispatcher("/req4").forward(request, response);
+  ```
+
+- 请求转发资源间共享数据：使用Request对象
+
+  - void setAttribute(String name,Object o)：存储数据到request域中
+  - Object getAttribute(String name)：根据 key ，获取值
+  - void removeAttribute(String name)：根据 key，删除该键值对
+
+
+
+- req3
+
+```java
+package com.meng.web;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+/**
+ * 请求转发
+ */
+@WebServlet("/req3")
+public class RequestDemo3 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("req3......");
+        //把要转发的数据存储到Request对象中
+        request.setAttribute("msg", "hello");
+        //请求转发
+        request.getRequestDispatcher("/req4").forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        this.doGet(request, response);
+    }
+}
+
+```
+
+- req4
+
+```java
+package com.meng.web;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+/**
+ * 请求转发
+ */
+@WebServlet("/req4")
+public class RequestDemo4 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("req4......");
+        //获取res3的数据
+        Object msg = request.getAttribute("msg");
+        System.out.println(msg);
+//        request.removeAttribute("msg");//删除共享的数据
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        this.doGet(request, response);
+    }
+}
+
+```
+
+
+
+- 请求转发的特点：
+  - 请求地址栏的路径url不发生变化
+  - 只能转发到当前服务器内部资源
+  - 一次请求，可以在转发的资源间使用Request对象共享数据
+
+
+
+
+
+#### Response
+
+- 使用Response对象设置响应数据
+- Response继承体系和Request继承体系基本一样
+  - ServletResponse：java提供的响应对象根接口
+  - HttpServletResponse：java提供的对Http协议封装的响应对象接口
+  - ResponseFacade：Tomcat定义的实现类
+
+##### Response设置响应数据功能介绍
+
+- 响应数据分为三部分：
+  1. 响应行：HTTP/1.1 200 OK
+     - void setStatus(int sc)：设置响应码
+  2. 响应头：Context-Type:text/html
+     - void setHeader(String name,String value)：设置响应头键值对
+  3. 响应体：<html><header><header/><body><body/><html/>
+     - PrintWriter getWriter()：获取字符输出流
+     - ServletOutputStream getOutputStream()：获取字节输出流
+
+
+
+
+
+##### Response完成重定向
+
+- 重定向(Redirect)：一种资源跳转的方式
+
+  1. 设置状态码：302
+  2. 响应头：location:xxxx
+
+- 实现方式：
+
+  ```java
+  resp.setStatus(302);
+  resp.setHeader("location","资源b的路径")
+  ```
+
+```java
+package com.meng.web.response;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet("/resp1")
+public class ResponseDemo1 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("resp1...");
+        //重定向
+        //1、设置响应状态码：302
+        //resp.setStatus(302);
+        //2、设置响应头location
+        //resp.setHeader("location", req.getContextPath() + "/resp2");
+
+        //简化方式完成重定向
+        resp.sendRedirect(req.getContextPath() + "/resp2");
+
+
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.doGet(req, resp);
+    }
+}
+
+```
+
+```java
+package com.meng.web.response;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+@WebServlet("/resp2")
+public class ResponseDemo2 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("resp2...");
+        PrintWriter writer = resp.getWriter();
+        writer.write("hello");
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.doGet(req, resp);
+    }
+}
+
+```
+
+- 重定向的特点：（和转发的特点完全相反）
+  - 浏览器的路径地址栏url发生改变
+  - 可以重定向到任意位置资源（服务器内部、外部均可）
+  - 两次请求，不能在多个资源使用request共享数据
+
+- 路径问题：
+  - 浏览器使用：需要加虚拟目录（项目的访问路径）（重定向）
+  - 服务端使用：不需要加虚拟目录（转发）
+
+<img src="https://gitee.com/xiaohugitee/tuchuang/raw/master/202203152133154.png" style="zoom:50%;" />
+
+
+
+
+
+
+
+##### Response响应字符数据
+
+- 使用：
+
+  1. 通过Response对象获取字符输入流
+
+     ```java
+     PrintWriter writer = response.getWriter();
+     ```
+
+  2. 写数据
+
+     ```java
+     writer.write("aaa");
+     ```
+
+```java
+package com.meng.web.response;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+/**
+ * 设置字符数据的响应体
+ */
+@WebServlet("/resp3")
+public class ResponseDemo3 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        //1、设置响应数据格式以及字符集!!!!!!!!!!否则会乱码
+        resp.setContentType("text/html;charset=utf-8");
+        //2、获取字符输出流
+//        resp.setHeader("content-type", "text/html");
+        PrintWriter writer = resp.getWriter();
+        writer.write("<h1>你好<h1>");
+        //细节：1. 输出流不需要关闭，会随着response对象销毁，由服务器关闭
+        //     2. 中文数据乱码：原因通过Response获取的字符字符输出流默认编码：ISO_8859_1
+        //         resp.setContentType("text/html;charset=utf-8");
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.doGet(req, resp);
+    }
+}
+
+```
+
+
+
+##### Response响应字节数据
+
+- 使用
+
+  1. 通过Response对象获取字节输出流
+
+     ```java
+     ServletOutputStream outputStream = response.getOutputStream;
+     ```
+
+  2. 写数据
+
+     ```java
+     outputStream.write(字节数据);
+     ```
+
+- IOUtils工具类使用
+
+  1. 导入坐标
+
+     ```xml
+     <!--        commons-io依赖坐标，提供了很多对io操作的工具-->
+             <dependency>
+                 <groupId>commons-io</groupId>
+                 <artifactId>commons-io</artifactId>
+                 <version>2.11.0</version>
+             </dependency>
+     ```
+
+  2. 使用
+
+     ```java
+     IOUtlis.copy(输入流，输出流);
+     ```
+
+```java
+package com.meng.web.response;
+
+import org.apache.commons.io.IOUtils;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+/**
+ * 设置字节数据的响应体
+ */
+@WebServlet("/resp4")
+public class ResponseDemo4 extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        //1、读取文件
+        FileInputStream fileInputStream = new FileInputStream("/Users/humeng/Pictures/IMG_8484(20220301-105418).JPG");
+
+        //2、获取response字节输出流
+        ServletOutputStream outputStream = resp.getOutputStream();
+
+        //3、完成流的copy
+        /*byte[] buffer = new byte[1024];
+        int len = 0;
+        while ((len = fileInputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, len);
+        }*/
+        IOUtils.copy(fileInputStream, outputStream);
+        fileInputStream.close();
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.doGet(req, resp);
+    }
+}
+
+```
 
 
 
