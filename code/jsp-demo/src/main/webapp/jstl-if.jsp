@@ -15,20 +15,20 @@
 <%--
         c:if  ：是来完成逻辑判断的，替换java if else
 --%>
-<c:if test="${status == 1}">
-    <h1>启用</h1>
-</c:if>
-<c:if test="${status != 1}">
-    <h1>禁用</h1>
-</c:if>
+<%--<c:if test="${status == 1}">--%>
+<%--    <h1>启用</h1>--%>
+<%--</c:if>--%>
+<%--<c:if test="${status != 1}">--%>
+<%--    <h1>禁用</h1>--%>
+<%--</c:if>--%>
 
-<c:forEach items="${brands}" var="brand">
-    <tr align="center">
-        <td>${brand.id}</td>
-        <td>${brand.brandName}</td>
-        <td>${brand.companyName}</td>
-        <td>${brand.description}</td>
-    </tr>
-</c:forEach>
+<%--<c:forEach items="${brands}" var="brand">--%>
+<%--    <tr align="center">--%>
+<%--        <td>${brand.id}</td>--%>
+<%--        <td>${brand.brandName}</td>--%>
+<%--        <td>${brand.companyName}</td>--%>
+<%--        <td>${brand.description}</td>--%>
+<%--    </tr>--%>
+<%--</c:forEach>--%>
 </body>
 </html>
