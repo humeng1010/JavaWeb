@@ -2,8 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/brand-demo/brand-demo.iml" filepath="$PROJECT_DIR$/brand-demo/brand-demo.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/code.iml" filepath="$PROJECT_DIR$/.idea/code.iml" />
       <module fileurl="file://$PROJECT_DIR$/d1_JDBC/d1_JDBC.iml" filepath="$PROJECT_DIR$/d1_JDBC/d1_JDBC.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jsp-demo/jsp-demo.iml" filepath="$PROJECT_DIR$/jsp-demo/jsp-demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/login-demo/login-demo/login-demo.iml" filepath="$PROJECT_DIR$/login-demo/login-demo/login-demo.iml" />
       <module fileurl="file://$PROJECT_DIR$/maven-demo/maven-demo.iml" filepath="$PROJECT_DIR$/maven-demo/maven-demo.iml" />
       <module fileurl="file://$PROJECT_DIR$/request-demo/request-demo.iml" filepath="$PROJECT_DIR$/request-demo/request-demo.iml" />
       <module fileurl="file://$PROJECT_DIR$/tomcat-demo1/tomcat-demo1/tomcat-demo1.iml" filepath="$PROJECT_DIR$/tomcat-demo1/tomcat-demo1/tomcat-demo1.iml" />

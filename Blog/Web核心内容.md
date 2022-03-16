@@ -898,9 +898,300 @@ public class ResponseDemo4 extends HttpServlet {
 
 
 
+### SqlSessionFatory工具类抽取
+
+- 问题：
+  1. 代码重复：工具类
+  2. SqlSessionFactory 工厂只创建一次，不要重复创建（浪费资源）：静态代码块
+
+
+
+```java
+package com.meng.util;
+
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+
+import java.io.InputStream;
+
+public class SqlSessionFactoryUtils {
+    private static SqlSessionFactory sqlSessionFactory;
+
+    //静态代码块会随着类的加载自动执行，并且值执行一次
+    static {
+        try {
+            String resource = "mybatis-config.xml";
+            InputStream inputStream = Resources.getResourceAsStream(resource);
+            sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static SqlSessionFactory getSqlSessionFactory() {
+
+        return sqlSessionFactory;
+
+    }
+}
+
+```
 
 
 
 
 
+## JSP
+
+- 概念：Java Server Pages，Java服务端页面
+- 一种动态的网站技术，其中既可以定义HTML、CSS、JS等静态内容，还可以定义Java代码的动态内容
+- JSP = HTML + Java
+- JSP的作用：简化开发，避免了在Servlet中直接输出HTML标签
+
+### JSP快速入门
+
+1. 导入JSP坐标（范围：provided）
+
+   ```xml
+   <!--      jsp-->
+           <dependency>
+               <groupId>javax.servlet.jsp</groupId>
+               <artifactId>jsp-api</artifactId>
+               <version>2.2</version>
+               <scope>provided</scope>
+           </dependency>
+   ```
+
+   
+
+2. 创建JSP文件
+
+3. 编写HTML标签和Java代码
+
+   ```jsp
+   <%--
+     Created by IntelliJ IDEA.
+     User: humeng
+     Date: 2022/3/16
+     Time: 3:51 PM
+     To change this template use File | Settings | File Templates.
+   --%>
+   <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+   <html>
+   <head>
+       <title>Title</title>
+   </head>
+   <body>
+   <h1>hello jsp</h1>
+   <%
+       System.out.println("hello jsp");
+   %>
+   </body>
+   </html>
+   
+   ```
+
+
+
+### JSP原理
+
+- **JSP本质就是一个Servlet**（JSP继承HttpJspBase，而HttpJspBase又继承HttpServlet，在jsp中的_jspService里就是通过输出流把我们的jsp写出去了，简化开发）
+
+  当浏览器请求hello.jsp，tomcat会把hello.jsp转换为Servlet的hello_jsp.java然后经过编译为class文件hello_jsp.class然后提供服务
+
+- JSP被访问的时候，由JSP容器（tomcat）将其转换为Java文件（Servlet），由JSP容器（Tomcat）将其编译，最终对外提供服务的其实就是这个字节码文件
+
+### JSP脚本
+
+- JSP脚本用于JSP页面内定义Java代码
+- JSP脚本分类：
+  1. <%.....%>：内容会直接放到_jspService()方法之中
+  1. <%=...%>：内容会放到out.print()之中，作为out.print()的参数
+  1. <%!...%>：内容会放到_jspService()方法之外，被类直接包含
+
+```jsp
+<%--
+  Created by IntelliJ IDEA.
+  User: humeng
+  Date: 2022/3/16
+  Time: 3:51 PM
+  To change this template use File | Settings | File Templates.
+--%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+<h1>hello jsp</h1>
+<%--jsp_service中--%>
+<%
+    System.out.println("hello jsp");
+    int i = 3;
+%>
+<%--out.print("内容")--%>
+<%="hello" + i%>
+<%--jsp_service方法外，成员变量，成员方法--%>
+<%!
+    String name = "张三";
+
+    void show() {
+
+        System.out.println(name);
+
+    }
+%>
+</body>
+</html>
+
+```
+
+### JSP缺点
+
+- 由于JSP页面内，既可以定义HTML标签，又可以定义Java代码，造成了以下问题：
+  - 书写麻烦：特别是复杂的页面
+  - 阅读麻烦
+  - 复杂程度高：运行需要依赖各种环境，JRE，JSP容器，JavaEE...
+  - 占内存和磁盘：JSP会自动生成 .java和 .class 文件占磁盘，运行的是 .class 文件占内存
+  - 调试困难：出错后，需要找到自动生成的 .java 文件进行调试
+  - 不利于团队协作：前端人员不会Java，后端人员不精HTML
+  - 。。。
+- **JSP已经逐渐退出历史舞台**，因为更好的技术替代了jsp：**HTML+AJAX**
+
+
+
+**JavaWeb技术演进的过程：Servlet，JSP，Servlet+JSP，Servlet+HTML+AJAX**
+
+**不要直接在JSP里面写JSP代码**：我们在Servlet中逻辑处理，封装数据；在JSP中获取数据，遍历展现数据
+
+
+
+### EL表达式
+
+- Expression Language 表达式语言，用于简化 JSP 页面内的Java代码
+
+- 主要功能：获取数据
+
+- 语法：${expression}
+
+  ${brands}：获取域中存储的key为brands的数据
+
+- JavaWeb中的四大域对象：
+
+  1. page：当前页面有效
+
+  2. request：当前请求有效（ **request.setAttribute("brands",brands);//存储到request域中，**
+
+     **通过转发到el-demo.jsp页面：request.getRequestDispatcher("/el-demo.jsp").forward(request,response);**
+
+  3. session：当前会话有效
+
+  4. application：当前应用有效
+
+- el表达式获取数据( ${brands} )，会依次从这4个域中寻找，直到找到为止（由小到大）
+
+
+
+### JSTL标签
+
+- JSP标准标签库，使用标签来取代JSP页面上的Java代码
+
+- 快速入门
+
+  1. 导入坐标
+
+     ```xml
+     <!--        jstl-->
+             <dependency>
+                 <groupId>javax.servlet</groupId>
+                 <artifactId>jstl</artifactId>
+                 <version>1.2</version>
+             </dependency>
+             <dependency>
+                 <groupId>taglibs</groupId>
+                 <artifactId>standard</artifactId>
+                 <version>1.1.2</version>
+             </dependency>
+     ```
+
+     
+
+  2. 在JSP页面上引入JSTL标签库
+
+     ```jsp
+     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+     ```
+
+  3. 使用
+
+     - < c:if >
+
+       ```jsp
+       <%--
+               c:if  ：是来完成逻辑判断的，替换java if else
+       --%>
+       <c:if test="${status == 1}">
+           <h1>启用</h1>
+       </c:if>
+       <c:if test="${status != 1}">
+           <h1>禁用</h1>
+       </c:if>
+       ```
+
+       
+
+     - < c:forEach >：相当于for循环
+
+       - items：被遍历的容器
+
+       - var：遍历产生的临时变量
+
+         ```jsp
+         <c:forEach items="${brands}" var="brand">
+             <tr align="center">
+                 <td>${brand.id}</td>
+                 <td>${brand.brandName}</td>
+                 <td>${brand.companyName}</td>
+                 <td>${brand.description}</td>
+             </tr>
+         </c:forEach>
+         ```
+
+
+
+
+
+## MVC模式和三层架构
+
+### MVC
+
+- MVC是一种分成开发的模式，其中：
+  - M：Model，业务模型，处理业务
+  - V：View，视图，界面展示
+  - C：Controller，控制器，处理请求，调用模型和视图
+- 步骤：
+  - 浏览器请求访问控制器，控制器（Servlet）就要来调用模型（JavaBean：业务逻辑层和数据访问层）获取数据（从数据库查询。。。），获取数据之后控制器将数据交给视图（JSP），视图做最终的页面展示
+
+- MVC好处：
+  - 职责单一，互不影响
+  - 有利于分工协作
+  - 有利于组件重用
+
+
+
+### 三层架构
+
+- **数据访问层**（数据持久层）（**dao/mapper**)  ：对数据库的CRUD基本操作（selectById，selectAll，insert，update，delete）
+- **业务逻辑层**（**service**）：对业务逻辑的封装，组合数据访问层 层中的基本功能，形成复杂的业务逻辑功能（例如：注册：selectByName，insert）
+- **表现层**（**controller**） ：接收请求，封装数据，调用业务逻辑层，响应数据
+
+
+
+后期框架：
+
+- 表现层（**S**pringMVC）
+- 业务逻辑层（**S**pring）
+- 数据访问层（**M**yBatis）
+- SSM框架
 
