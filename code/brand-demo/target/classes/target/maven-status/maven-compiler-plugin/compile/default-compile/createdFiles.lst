@@ -1,6 +1,6 @@
+com/meng/dao/BrandMapper.class
 com/meng/service/impl/BrandServiceImpl.class
 com/meng/util/SqlSessionFactoryUtil.class
+com/meng/controller/servlet/BrandServlet.class
 com/meng/pojo/Brand.class
 com/meng/service/BrandService.class
-com/meng/dao/BrandMapper.class
-com/meng/controller/servlet/BrandServlet.class

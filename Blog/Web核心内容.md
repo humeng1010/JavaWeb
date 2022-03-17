@@ -1439,3 +1439,56 @@ public class SessionDemo2 extends HttpServlet {
 
 ```
 
+
+
+#### Session原理
+
+- **Session是基于Cookie实现的**
+  - 通过请求1获取session对象，其实session在服务端是有一个唯一的标识：id，会自动通过cookie发送到客户端浏览器（JSEEIONID=xxxxxx），当浏览器发送请求2的时候，会把JSESSIONID=xxxxxxx发送给服务端，根据id找对应的session，如果有该session对象直接使用，如果没有会创建session对象
+
+#### Session的使用细节
+
+- Session的钝化、活化
+
+  - 服务器重启后，Session中的数据是否还在？（在）
+    - 钝化：在服务器正常关闭后，tomcat会自动将session数据写入到硬盘文件中去
+    - 活化：再次启动服务器后，从文件中加载数据到session中
+
+- Session销毁
+
+  - 默认情况下，无操作，30分钟自动销毁
+
+    ```xml
+    		<!-- web.xml -->
+    		<session-config>
+            <session-timeout>30</session-timeout>
+        </session-config>
+    ```
+
+  - ```java
+    //销毁，注销账户
+    session.invalidate();
+    ```
+
+
+
+### 小结
+
+- Cookie和Session都是来完成一次会话内的多次请求间**共享数据**的
+- 区别：
+  - **存储位置：**Cookie是将数据存储在客户端，Session是将数据存储在服务端
+  - **安全性：**Cookie不安全，Session安全
+  - **数据大小：**Cookie最大3kb，Session无大小限制
+  - **存储时间：**Cookie可以长期存储，Session默认30分钟
+  - **服务器性能：**Cookie不占服务器资源，Session占用服务器资源
+
+
+
+
+
+## Filter
+
+- 概念：Filter表示过滤器，是javaWeb三大组件（Servlet、Filter、Listener）之一
+- 过滤器可以把对资源的请求**拦截**下来，从而实现一些特殊的功能
+- 过滤器一般完成一些**通用**的操作，比如权限控制、统一编码处理、敏感字符处理等等...
+- 

@@ -1,11 +1,6 @@
 /Users/humeng/Gitee/java-web/code/brand-demo/src/main/java/com/meng/pojo/Brand.java
 /Users/humeng/Gitee/java-web/code/brand-demo/src/main/java/com/meng/dao/BrandMapper.java
-/Users/humeng/Gitee/java-web/code/brand-demo/src/main/java/com/meng/dao/UserMapper.java
-/Users/humeng/Gitee/java-web/code/brand-demo/src/main/java/com/meng/pojo/User.java
-/Users/humeng/Gitee/java-web/code/brand-demo/src/main/java/com/meng/controller/servlet/LoginServlet.java
 /Users/humeng/Gitee/java-web/code/brand-demo/src/main/java/com/meng/service/BrandService.java
 /Users/humeng/Gitee/java-web/code/brand-demo/src/main/java/com/meng/controller/servlet/BrandServlet.java
-/Users/humeng/Gitee/java-web/code/brand-demo/src/main/java/com/meng/service/impl/UserServiceImpl.java
-/Users/humeng/Gitee/java-web/code/brand-demo/src/main/java/com/meng/service/UserService.java
 /Users/humeng/Gitee/java-web/code/brand-demo/src/main/java/com/meng/util/SqlSessionFactoryUtil.java
 /Users/humeng/Gitee/java-web/code/brand-demo/src/main/java/com/meng/service/impl/BrandServiceImpl.java
