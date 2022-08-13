@@ -38,5 +38,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="Maven: com.alibaba:druid:1.2.8" level="project" />
   </component>
 </module>

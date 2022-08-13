@@ -15,13 +15,13 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="brand-demo" target="1.8" />
-      <module name="jsp-demo" target="1.8" />
-      <module name="login-demo" target="1.8" />
-      <module name="maven-demo" target="1.8" />
+      <module name="brand-demo" target="1.5" />
+      <module name="jsp-demo" target="1.5" />
+      <module name="login-demo" target="1.5" />
+      <module name="maven-demo" target="1.5" />
       <module name="maven-demo2" target="1.8" />
-      <module name="request-demo" target="1.8" />
-      <module name="tomcat-demo1" target="1.8" />
+      <module name="request-demo" target="1.5" />
+      <module name="tomcat-demo1" target="1.5" />
     </bytecodeTargetLevel>
   </component>
 </project>
