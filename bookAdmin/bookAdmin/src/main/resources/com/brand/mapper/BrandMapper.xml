@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    namespace:名称空间,对应mapper接口
+-->
+<mapper namespace="com.brand.mapper.BrandMapper">
+<resultMap id="brandResultMap" type="brand">
+    <result column="brand_name" property="brandName"/>
+    <result column="company_name" property="companyName"/>
+</resultMap>
+    <update id="updateBrand">
+        update tb_brand
+       <set>
+           <if test="brandName!=null and brandName!=''">
+            brand_name = #{brandName},
+           </if>
+           <if test="companyName!=null and companyName!=''">
+              company_name = #{companyName},
+           </if>
+           <if test="ordered!=null and ordered!=''">
+               ordered = #{ordered},
+           </if>
+           <if test="status!=null">
+               status = #{status},
+           </if>
+       </set>
+        where id = #{id} ;
+    </update>
+</mapper>
