@@ -3,6 +3,9 @@
 #### 介绍
 JavaWeb的学习笔记
 
+#### 笔记地址
+https://www.yuque.com/redyouzi/javaweb
+
 视频地址
 
 https://www.bilibili.com/video/BV1Qf4y1T7Hx
